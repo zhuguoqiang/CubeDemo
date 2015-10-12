@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>白板DEMO</title>
+<style>
+html,body{
+	width:100%;
+	height:100%;
+	overflow: hidden;
+}
+*{
+	padding: 0px;
+	margin: 0px;
+}
+#wb_canvas{
+	height:auto;
+	width:auto;
+	position:absolute;
+	top: 0px;
+	left: 0px;
+	right: 0px;
+	bottom: 0px;
+    border: 2px solid rgb(100,100,105);
+	overflow: hidden;
+}
+</style>
+
+</head>
+<body>
+<div id="wb_canvas"></div>
+    
+<!-- nucleus 核心库 -->
+<script type="text/javascript" src="./libs/nucleus-min.js"></script>
+<!-- Cube 内核库 -->
+<script type="text/javascript" src="./libs/cube-core-min.js"></script>
+<!-- Cube 白板模块 -->
+<script type="text/javascript" src="./libs/cube-whiteboard-min.js"></script>
+<script type="text/javascript" src="./libs/whiteboard.js"></script> 
+<script type="text/javascript" src="./libs/ajsb.js"></script>
+<script>
+	document.body.addEventListener('touchmove', function (event) {//fixed huawei mobile
+	    event.preventDefault();
+	}, false);
+
+	window.onerror = function(err) {
+		window.console.log('window.onerror: ' + err);
+	}
+
+	function connectWebViewJavascriptBridge(callback) {
+		if (window.WebViewJavascriptBridge) {
+			callback(WebViewJavascriptBridge)
+		}
+		else {
+			document.addEventListener('WebViewJavascriptBridgeReady', function() {
+				callback(WebViewJavascriptBridge)
+			}, false)
+		}
+	}
+	
+	connectWebViewJavascriptBridge(function(bridge) {
+		var uniqueId = 1
+		window.app.bridge = bridge;
+		
+		function log(message, data) {		
+			bridge.callHandler('consoleLog', message + JSON.stringify(data), function () {});
+		}
+		
+		bridge.init(function(message, responseCallback) {
+			log('JS got a message', message)
+			var data = { 'Javascript Responds':'Wee!' }
+			log('JS responding with', data)
+			responseCallback(data)
+		});
+
+		bridge.registerHandler('testJavascriptHandler', function(data, responseCallback) {
+			log('ObjC called testJavascriptHandler with', data)
+			var responseData = { 'Javascript Says':'Right back atcha!' }
+			log('JS responding with', responseData)
+			responseCallback(responseData)
+		});
+		
+		//注册分享工具桥接
+		bridge.registerHandler('shareWith', function(data, responseCallback) {
+			log('ObjC called shareWith with', data);
+			window.app.shareWith(data.list[0]);
+		});
+		
+		//注册停止分享工具桥接
+		bridge.registerHandler('revokeSharing', function(data, responseCallback) {
+			log('ObjC called revokeSharing with', data)
+			window.app.revokeSharing();
+			//TODO
+		});
+		
+		//注册查询是否分享桥接
+		bridge.registerHandler('isSharing', function(data, responseCallback) {
+			log('ObjC called isSharing with', data);
+			var isSharing = window.app.isSharing();
+			responseCallback(isSharing);
+			//TODO
+		});
+		
+		//取消选择桥接
+		bridge.registerHandler('unselect', function(data, responseCallback) {
+			log('ObjC called unselect with', data)
+			window.app.unselect();
+		});
+		
+		//注册铅笔工具桥接
+		bridge.registerHandler('selectPencil', function(data, responseCallback) {
+			log('ObjC called selectPencil with', data)
+			window.app.selectPencil();
+		});
+		
+		//注册文本工具桥接
+		bridge.registerHandler('selectText', function(data, responseCallback) {
+			log('ObjC called selectText with', data)
+			window.app.selectText();
+		});
+		
+		//注册方框工具桥接
+		bridge.registerHandler('selectRect', function(data, responseCallback) {
+			log('ObjC called selectRect with', data)
+			window.app.selectRect();
+		});
+		
+		//注册圆圈工具桥接
+		bridge.registerHandler('selectEllipse', function(data, responseCallback) {
+			log('ObjC called selectEllipse with', data)
+			window.app.selectEllipse();
+		});
+		
+		//注册撤销工具桥接
+		bridge.registerHandler('Undo', function(data, responseCallback) {
+			log('ObjC called undo with', data)
+			window.app.undo();
+		});
+		
+		//注册重做工具桥接
+		bridge.registerHandler('Redo', function(data, responseCallback) {
+			log('ObjC called redo with', data)
+			window.app.redo();
+		});
+		
+		//注册擦除工具桥接
+		bridge.registerHandler('Erase', function(data, responseCallback) {
+			log('ObjC called erase with', data)
+			window.app.erase();
+		});
+		
+		//注册清除工具桥接
+		bridge.registerHandler('cleanup', function(data, responseCallback) {
+			log('ObjC called cleanup with', data)
+			window.app.cleanup();
+		});
+		
+		//注册保存工具桥接
+		bridge.registerHandler('saveToServer', function(data, responseCallback) {
+			log('ObjC called saveToServer with', data)
+			//TODO
+		});
+		
+		//注册配置笔触参数：颜色， 线重，等
+		bridge.registerHandler('configLine', function(data, responseCallback) {
+			log('ObjC called configLine with', data)
+			// TODO
+			window.app.configLine(data);
+		});
+		
+		//注册缩放工具桥接
+		bridge.registerHandler('zoom', function(data, responseCallback) {
+			log('ObjC called zoom with', data)
+			//TODO
+		});
+		
+		//注册文件分享工具
+		bridge.registerHandler('onSharingReady', function(data, responseCallback) {
+			log('ObjC called onSharingReady with', data);
+			var strfile = data.file;
+			var file = null;
+			if (utils.isAndroid){
+				file = JSON.parse(strfile)
+			}else{
+				file = strfile;
+			}
+			window.app.onSharingReady(file);
+		});
+		
+		//注册下一页桥接
+		bridge.registerHandler('nextPage', function(data, responseCallback) {
+			log('ObjC called nextPage with', data);
+			window.app.nextPage();
+			//TODO
+		});
+		
+		//注册上一页桥接
+		bridge.registerHandler('prevPage', function(data, responseCallback) {
+			log('ObjC called prevPage with', data);
+			window.app.prevPage();
+			//TODO
+		});
+		
+		//注册前往某页桥接
+		bridge.registerHandler('gotoPage', function(data, responseCallback) {
+			log('ObjC called gotoPage with', data);
+			var page = data.page;
+			window.app.gotoPage(page);
+			//TODO
+		});
+	});
+
+	if (utils.isAndroid) {
+		ajsb.addJavascriptMethod('isSharing', function(params) {
+			var isSharing = window.app.isSharing();
+			return {'isSharing':isSharing};
+		});
+		
+		ajsb.addJavascriptMethod('configLine', function(params) {
+			window.app.configLine(params);
+			return {'configLine': params};
+		});
+		
+		ajsb.addJavascriptMethod('shareWith', function(params) {
+			window.app.shareWith(params.name);
+			return {'shareWith': params};
+		});
+		
+		ajsb.addJavascriptMethod('onSharingReady', function(params) {
+			var strfile = params.file;
+			window.app.onSharingReady(JSON.parse(strfile));
+			return {'onSharingReady' : params};
+		});
+	}
+</script>
+</body>
+</html>

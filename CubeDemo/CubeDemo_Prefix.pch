@@ -1,0 +1,21 @@
+//
+//  CubeDemo_Prefix.pch
+//  CubeDemo
+//
+//  Created by guoqiangzhu on 15/10/11.
+//  Copyright (c) 2015年 CubeTeam. All rights reserved.
+//
+
+#ifndef CubeDemo_CubeDemo_Prefix_pch
+#define CubeDemo_CubeDemo_Prefix_pch
+
+#import <UIKit/UIKit.h>
+
+#if TARGET_IPHONE_SIMULATOR
+#define SIMULATOR 1
+#elif TARGET_OS_IPHONE
+#define SIMULATOR 0
+#endif
+
+#define DLog( s, ... ) NSLog( @"<%p %@:(%d)> %@", self, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__, [NSString stringWithFormat:(s), ##__VA_ARGS__] )
+#endif
